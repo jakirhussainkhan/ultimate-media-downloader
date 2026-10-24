@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#05070d">
+    <meta name="color-scheme" content="dark">
+    <meta name="description" content="Ultimate Media Downloader — extract and download original-quality videos and images from Pinterest, Instagram, Facebook, and more, with on-demand MP3 audio.">
+    <meta name="robots" content="index, follow">
+    <title>Ultimate Media Downloader — Original Quality Media Toolkit</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</head>
+<body data-ffmpeg="{{ 'true' if ffmpeg_available else 'false' }}">
+    <div class="ambient" aria-hidden="true">
+        <span class="ambient__orb ambient__orb--emerald"></span>
+        <span class="ambient__orb ambient__orb--cyan"></span>
+        <span class="ambient__orb ambient__orb--violet"></span>
+        <span class="ambient__grid"></span>
+        <span class="ambient__noise"></span>
+    </div>
+
+    <header class="site-header">
+        <a class="brand" href="/" aria-label="{{ app_name }} home">
+            <span class="brand__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img" focusable="false">
+                    <path d="M12 3v11m0 0 4.2-4.2M12 14 7.8 9.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M5 16.5v1.2A2.3 2.3 0 0 0 7.3 20h9.4a2.3 2.3 0 0 0 2.3-2.3v-1.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+            </span>
+            <span class="brand__copy">
+                <span class="brand__name">{{ app_name }}</span>
+                <span class="brand__tagline">Original quality · zero clutter</span>
+            </span>
+        </a>
+        <span class="version-badge" title="Current release">v{{ app_version }}</span>
+    </header>
+
+    <main class="page">
+        <section class="hero" aria-labelledby="heroTitle">
+            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span> Universal media toolkit</p>
+            <h1 id="heroTitle">Save the media you love,<br><span class="gradient-text">in original quality.</span></h1>
+            <p class="hero__lede">Paste a public link. Get a clean preview, the original video or image, and a studio-quality MP3 when you need just the audio.</p>
+            <div class="platforms" aria-label="Supported platforms">
+                <span class="platform-chip"><span class="platform-chip__dot platform-chip__dot--pinterest" aria-hidden="true"></span>Pinterest</span>
+                <span class="platform-chip"><span class="platform-chip__dot platform-chip__dot--instagram" aria-hidden="true"></span>Instagram</span>
+                <span class="platform-chip"><span class="platform-chip__dot platform-chip__dot--facebook" aria-hidden="true"></span>Facebook</span>
+                <span class="platform-chip"><span class="platform-chip__dot platform-chip__dot--plus" aria-hidden="true"></span>+ 1,000 sites</span>
+            </div>
+        </section>
+
+        <section class="panel" aria-labelledby="extractTitle">
+            <h2 id="extractTitle" class="sr-only">Extract media</h2>
+            <form id="mediaForm" class="extract-form" novalidate>
+                <div class="input-shell">
+                    <span class="input-shell__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M10.6 13.4a4 4 0 0 0 5.7 0l2.4-2.4a4 4 0 0 0-5.7-5.7L11.7 6.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            <path d="M13.4 10.6a4 4 0 0 0-5.7 0l-2.4 2.4a4 4 0 0 0 5.7 5.7l1.3-1.3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <label class="sr-only" for="mediaUrl">Media URL</label>
+                    <input
+                        id="mediaUrl"
+                        name="url"
+                        type="text"
+                        inputmode="url"
+                        autocomplete="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        placeholder="Paste a Pinterest, Instagram, Facebook, or video link…"
+                        aria-describedby="urlHint"
+                    >
+                    <button type="button" id="pasteBtn" class="ghost-button" title="Paste from clipboard">Paste</button>
+                </div>
+
+                <button type="submit" id="extractBtn" class="primary-button primary-button--extract">
+                    <span class="primary-button__label">Extract media</span>
+                    <span class="spinner spinner--button" id="extractSpinner" hidden aria-hidden="true"></span>
+                    <span class="primary-button__arrow" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><path d="M5 12h13m0 0-4.5-4.5M18 12l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                </button>
+            </form>
+
+            <p id="urlHint" class="hint">Public links only. Private, login-gated, or DRM-protected media cannot be downloaded.</p>
+
+            <div id="statusPanel" class="status-panel" hidden aria-live="polite" aria-atomic="true">
+                <span class="spinner spinner--status" aria-hidden="true"></span>
+                <div class="status-panel__copy">
+                    <span id="statusText" class="status-panel__text">Validating the link…</span>
+                    <span class="status-panel__sub">This usually takes a few seconds.</span>
+                </div>
+                <div class="status-panel__track" aria-hidden="true"><span class="status-panel__bar"></span></div>
+            </div>
+        </section>
+
+        <section id="resultPanel" class="result-panel" hidden aria-labelledby="mediaTitle">
+            <div id="previewFrame" class="preview-frame">
+                <div class="preview-placeholder" aria-hidden="true">
+                    <span class="spinner spinner--preview"></span>
+                </div>
+            </div>
+
+            <div class="result-body">
+                <div class="result-badges">
+                    <span id="platformBadge" class="badge badge--platform">Media</span>
+                    <span id="formatBadge" class="badge">MP4</span>
+                    <span id="qualityBadge" class="badge badge--quality">Best available</span>
+                </div>
+
+                <h2 id="mediaTitle" class="media-title" tabindex="-1">Untitled media</h2>
+                <p id="mediaSubtitle" class="media-subtitle">Ready to download.</p>
+
+                <div class="result-actions">
+                    <a id="downloadBtn" class="primary-button primary-button--download" href="#" rel="noopener">
+                        <span class="primary-button__label">Download original</span>
+                        <span class="primary-button__arrow" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                    </a>
+
+                    <button type="button" id="mp3Btn" class="secondary-button" hidden>
+                        <span class="secondary-button__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false"><path d="M9 18V6l10-2v11" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="16.5" cy="15" r="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+                        </span>
+                        <span class="secondary-button__label">Extract MP3 audio</span>
+                        <span class="spinner spinner--button" id="mp3Spinner" hidden aria-hidden="true"></span>
+                    </button>
+
+                    <button type="button" id="copyBtn" class="text-button">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="10" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                        <span id="copyLabel">Copy direct link</span>
+                    </button>
+                </div>
+
+                <p class="result-note">Preview and downloads are proxied through this server. Temporary files are deleted immediately after streaming.</p>
+            </div>
+        </section>
+
+        <section class="trust-grid" aria-label="Why Ultimate Media Downloader">
+            <article class="trust-card">
+                <span class="trust-card__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M12 3 5 6v5c0 4.5 2.9 8.1 7 10 4.1-1.9 7-5.5 7-10V6l-7-3Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <h3>SSRF-hardened</h3>
+                <p>Every outbound URL is validated, resolved, and checked against private and metadata ranges.</p>
+            </article>
+            <article class="trust-card">
+                <span class="trust-card__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M4 7h16v10H4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m9 10 2.2 2L9 14m4 0h3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <h3>Original quality</h3>
+                <p>The source file is streamed as-is. No re-encoding, no watermark, no fake resolution buttons.</p>
+            </article>
+            <article class="trust-card">
+                <span class="trust-card__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M5 8.5A2.5 2.5 0 0 1 7.5 6H9l1-2h4l1 2h1.5A2.5 2.5 0 0 1 19 8.5v8A2.5 2.5 0 0 1 16.5 19h-9A2.5 2.5 0 0 1 5 16.5v-8Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12.5" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                </span>
+                <h3>Nothing stored</h3>
+                <p>Media is never archived. MP3 files live in a private temp folder and are shredded after streaming.</p>
+            </article>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>Built with Flask, yt-dlp &amp; a healthy respect for the open web.</p>
+        <div class="site-footer__meta">
+            <a href="/health" target="_blank" rel="noopener">Service status</a>
+            <span aria-hidden="true">·</span>
+            <span>{{ app_name }} v{{ app_version }}</span>
+        </div>
+    </footer>
+
+    <div id="toastRegion" class="toast-region" role="region" aria-label="Notifications" aria-live="assertive"></div>
+
+    <noscript>
+        <div class="noscript">JavaScript is required to extract and preview media.</div>
+    </noscript>
+</body>
+</html>

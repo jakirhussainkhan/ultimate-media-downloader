@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#05070d">
+    <meta name="color-scheme" content="dark">
+    <meta name="robots" content="noindex">
+    <title>{{ code }} · {{ app_name }}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="ambient" aria-hidden="true">
+        <span class="ambient__orb ambient__orb--emerald"></span>
+        <span class="ambient__orb ambient__orb--cyan"></span>
+        <span class="ambient__orb ambient__orb--violet"></span>
+        <span class="ambient__grid"></span>
+        <span class="ambient__noise"></span>
+    </div>
+
+    <header class="site-header">
+        <a class="brand" href="/" aria-label="{{ app_name }} home">
+            <span class="brand__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img" focusable="false">
+                    <path d="M12 3v11m0 0 4.2-4.2M12 14 7.8 9.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M5 16.5v1.2A2.3 2.3 0 0 0 7.3 20h9.4a2.3 2.3 0 0 0 2.3-2.3v-1.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+            </span>
+            <span class="brand__copy">
+                <span class="brand__name">{{ app_name }}</span>
+                <span class="brand__tagline">Original quality · zero clutter</span>
+            </span>
+        </a>
+        <span class="version-badge">v{{ app_version }}</span>
+    </header>
+
+    <main class="error-shell" aria-labelledby="errorTitle">
+        <span class="error-code">ERROR {{ code }}</span>
+        <h1 id="errorTitle">{{ title }}</h1>
+        <p>{{ message }}</p>
+        <div class="error-actions">
+            <a class="primary-button" href="/">
+                <span class="primary-button__label">Back to downloader</span>
+                <span class="primary-button__arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M5 12h13m0 0-4.5-4.5M18 12l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+            </a>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>Built with Flask, yt-dlp &amp; a healthy respect for the open web.</p>
+        <div class="site-footer__meta">
+            <span>{{ app_name }} v{{ app_version }}</span>
+        </div>
+    </footer>
+</body>
+</html>
